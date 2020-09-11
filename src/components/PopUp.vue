@@ -15,56 +15,55 @@ export default {
     name: "PopUp",
     data() {
         return {
-            minutes: 25,
-            seconds: 0,
-            minutesText: "25",
+            minutesText: "00",
             secondsText: "00",
-            duration: 0,
             interval: null,
             isRunning: false,
-            mode: 0
         }
     },
     created() {
-        this.parseText();
+        this.getBackgroundTimer();
+
+            chrome.runtime.sendMessage({
+                action: "isRunning"
+            }, (response) => {
+                console.log(response);
+                if(response == true) {
+                    this.isRunning = true;
+                    this.displayTimer();
+                }
+            }); 
     },
 
     methods: {
-
         startTimer() {
+            chrome.runtime.sendMessage({ action: "setTimer"});
             this.isRunning = true;
-            this.duration = this.minutes * 60 + this.seconds;
+            this.displayTimer();
+        },
+
+        displayTimer() {
             this.interval = setInterval(() => {
-                this.minutes = parseInt(this.duration / 60, 10);
-                this.seconds = parseInt(this.duration % 60, 10);
-
-                this.parseText();
-
-                if( --this.duration < 0 ) {
-                    this.mode = this.mode == 0 ? 1 : 0;
-                    alert("Time has passed.");
-                    this.restart();
-                }
+                this.getBackgroundTimer();
             }, 1000);
         },
 
         pauseTimer() {
             this.isRunning = false;
-            window.clearInterval(this.interval);
         },
 
         restart() {
-            this.isRunning = false;
-            window.clearInterval(this.interval);
-            this.minutes = this.mode == 0 ? 25 : 5;
-            this.seconds = 0;
-            this.parseText();
         },
 
-        parseText() {
-            this.minutesText = this.minutes < 10 ? "0" + this.minutes.toString() : this.minutes.toString();
-            this.secondsText = this.seconds < 10 ? "0" + this.seconds.toString() : this.seconds.toString();
+        getBackgroundTimer() {
+            chrome.runtime.sendMessage({
+                action: "getTime"
+            }, (time) => {
+                this.minutesText = time.minutes;
+                this.secondsText = time.seconds;
+            });  
         }
+
     }
 }
 </script>
