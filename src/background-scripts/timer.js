@@ -1,3 +1,4 @@
+import Badge from "./badge";
 export default class Timer {
 
     constructor() {
@@ -5,6 +6,7 @@ export default class Timer {
         this.seconds = 0;
         this.minutesText = "25";
         this.secondsText = "00";
+        this.badge = new Badge();
         this.duration = 0;
         this.interval = null;
         this.isRunning = false;
@@ -12,22 +14,37 @@ export default class Timer {
         this.resetTimer();
         this.setListeners();
     }
+    
     resetTimer() {
         if(this.interval) {
             clearInterval(this.interval);
         }
+        this.isRunning = false;
+        this.minutes = 25;
+        this.seconds = 0;
     }
 
     setTimer() {
-        this.resetTimer();
         this.isRunning = true;
         this.duration = this.minutes * 60 + this.seconds;
         this.interval = setInterval(() => {
             this.minutes = parseInt(this.duration / 60, 10);
             this.seconds = parseInt(this.duration % 60, 10);
-            console.log(this.seconds);
-            --this.duration;
+
+
+            if( this.badge.getBadgeText() !== this.minutes.toString()) {
+                this.badge.setBadgeText(this.minutes.toString());
+            }
+            if(--this.duration < 0) {
+                this.resetTimer();
+            }
+
         }, 1000);
+    }
+
+    pauseTimer() {
+        this.isRunning = false;
+        clearInterval(this.interval);
     }
 
     parseText() {
@@ -45,10 +62,15 @@ export default class Timer {
             switch(message.action) {
                 case "setTimer":
                     _this.setTimer();
-                    sendResponse(true);
                     break;
                 case "getTime":
                     sendResponse(_this.parseText());
+                    break;
+                case "resetTimer":
+                    _this.resetTimer();
+                    break;
+                case "pauseTimer":
+                    _this.pauseTimer();
                     break;
                 case "isRunning":
                     sendResponse(_this.isRunning);

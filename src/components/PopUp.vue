@@ -50,9 +50,12 @@ export default {
 
         pauseTimer() {
             this.isRunning = false;
+            chrome.runtime.sendMessage({ action: "pauseTimer"});
         },
 
         restart() {
+            this.isRunning = false;
+            chrome.runtime.sendMessage({ action: "resetTimer"});
         },
 
         getBackgroundTimer() {
