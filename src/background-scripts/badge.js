@@ -3,7 +3,7 @@ export default class Badge {
     constructor() {
         this.text = "";
         this.color = "#FF0000";
-        chrome.browserAction.setBadgeBackgroundColor( {color: "#FF0000"} );
+        this.setBadgeBackgroundColor(this.color);
     }
 
     getBadgeText() {
@@ -13,6 +13,11 @@ export default class Badge {
     setBadgeText(text) {
         chrome.browserAction.setBadgeText( {text: text} );
         this.text = text;
+    }
+
+    setBadgeBackgroundColor(color) {
+        chrome.browserAction.setBadgeBackgroundColor( {color: color} );
+        this.color = color;
     }
 
 }
