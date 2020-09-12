@@ -2,17 +2,23 @@ import Badge from "./badge";
 export default class Timer {
 
     constructor() {
-        this.minutes = 25;
+        this.minutes = 0;
         this.seconds = 0;
-        this.minutesText = "25";
+        this.minutesText = "00";
         this.secondsText = "00";
         this.badge = new Badge();
         this.duration = 0;
         this.interval = null;
         this.isRunning = false;
-        this.mode = null;
-        this.resetTimer();
+        this.mode = 0;
+        this.cycles = 0;
+        this.userSettings = {
+            work: 25,
+            rest: 5,
+            long: 15
+        }  
         this.setListeners();
+        this.resetTimer();
     }
     
     resetTimer() {
@@ -20,26 +26,59 @@ export default class Timer {
             clearInterval(this.interval);
         }
         this.isRunning = false;
-        this.minutes = 25;
+        switch (this.mode) {
+            case 0:
+                this.resetTimerWork();
+                break;
+            case 1:
+                this.resetTimerBreak();
+                break;
+            case 2:
+                this.resetTimerLong();
+                break;
+            default:
+                break;
+        }
+    }
+
+    resetTimerWork() {
+        this.minutes = this.userSettings.work;
         this.seconds = 0;
+        this.mode = 0;
+        ++this.cycles;
+    }
+
+    resetTimerBreak() {
+        this.minutes = this.userSettings.rest;
+        this.seconds = 0;
+        this.mode = 1;
+    }
+
+    resetTimerLong() {
+        this.minutes = this.userSettings.long;
+        this.seconds = 0;
+        this.mode = 2;
+        this.cycles = 0;
     }
 
     setTimer() {
         this.isRunning = true;
         this.duration = this.minutes * 60 + this.seconds;
-        this.interval = setInterval(() => {
-            this.minutes = parseInt(this.duration / 60, 10);
-            this.seconds = parseInt(this.duration % 60, 10);
-
-
-            if( this.badge.getBadgeText() !== this.minutes.toString()) {
-                this.badge.setBadgeText(this.minutes.toString());
-            }
-            if(--this.duration < 0) {
-                this.resetTimer();
-            }
-
-        }, 1000);
+        setTimeout(() => { // timeout to synchronize intervals
+            this.interval = setInterval(() => {
+                this.minutes = parseInt(this.duration / 60, 10);
+                this.seconds = parseInt(this.duration % 60, 10);
+                
+                if( this.badge.getBadgeText() !== this.minutes.toString()) {
+                    this.minutes >= 1 ? this.badge.setBadgeText(this.minutes.toString()) : this.badge.setBadgeText("<1");
+                }
+                if(--this.duration < 0) {
+                    alert("Hey! Time has passed.");
+                    this.changeMode(null);
+                }
+                
+            }, 1000);
+        }, 1000 - new Date().getMilliseconds())
     }
 
     pauseTimer() {
@@ -52,8 +91,22 @@ export default class Timer {
         this.secondsText = this.seconds < 10 ? "0" + this.seconds.toString() : this.seconds.toString();
         return {
             minutes: this.minutesText,
-            seconds: this.secondsText
+            seconds: this.secondsText,
+            mode: this.mode
         }
+    }
+
+    changeMode(mode) {
+        if(mode) {
+            this.mode = mode;
+        }else{
+            if(this.cycles > 2) {
+                this.mode = 2;
+            }else{
+                this.mode = this.mode === 0 ? 1 : 0;
+            }
+        }
+        this.resetTimer();
     }
 
     setListeners() {
@@ -74,6 +127,9 @@ export default class Timer {
                     break;
                 case "isRunning":
                     sendResponse(_this.isRunning);
+                    break;
+                case "changeMode":
+                    _this.changeMode(message.mode);
                     break;
                 default:
                     break;

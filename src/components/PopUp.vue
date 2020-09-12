@@ -1,7 +1,18 @@
 <template>
     <div class="time">
-        <h2>Pomodoro session</h2>
-        <p>{{ minutesText }}:{{ secondsText }}</p>
+        <section>
+            <b-tabs v-model="activeTab" @input="onTabChange">
+                <template v-for="tab in tabs">
+                    <b-tab-item
+                        :key="tab.id"
+                        :value="tab.id.toString()"
+                        :label="tab.label">
+                        <h2>Pomodoro - {{ tab.label }}</h2>
+                        <p>{{ minutesText }}:{{ secondsText }}</p>
+                    </b-tab-item>
+                </template> 
+            </b-tabs>
+        </section>
         <div class="controls">
             <div v-if="isRunning === false" v-on:click="startTimer();" class="control">▶</div>
             <div v-else v-on:click="pauseTimer()" class="control">❚❚</div>
@@ -19,20 +30,41 @@ export default {
             secondsText: "00",
             interval: null,
             isRunning: false,
+            activeTab: 0,
+            tabs: [
+                {
+                    id: 0,
+                    label: "Work",
+                    content: "hey",
+                    minutes: 25
+                },
+                {
+                    id: 1,
+                    label: "Break",
+                    content: "Break",
+                    minutes: "05"
+                },
+                {
+                    id: 2,
+                    label: "Long Break",
+                    content: "Long Break",
+                    minutes: 15
+                }
+            ]
         }
     },
+
     created() {
         this.getBackgroundTimer();
 
-            chrome.runtime.sendMessage({
-                action: "isRunning"
-            }, (response) => {
-                console.log(response);
-                if(response == true) {
-                    this.isRunning = true;
-                    this.displayTimer();
-                }
-            }); 
+        chrome.runtime.sendMessage({
+            action: "isRunning"
+        }, (response) => {
+            if(response == true) {
+                this.isRunning = true;
+                this.displayTimer();
+            }
+        });
     },
 
     methods: {
@@ -43,14 +75,17 @@ export default {
         },
 
         displayTimer() {
-            this.interval = setInterval(() => {
-                this.getBackgroundTimer();
-            }, 1000);
+            setTimeout(() => { // timeout to synchronize intervals
+                this.interval = setInterval(() => {
+                    this.getBackgroundTimer();
+                }, 1000);
+            }, 1000 - new Date().getMilliseconds())
         },
 
         pauseTimer() {
             this.isRunning = false;
             chrome.runtime.sendMessage({ action: "pauseTimer"});
+            clearInterval(this.interval);
         },
 
         restart() {
@@ -61,10 +96,18 @@ export default {
         getBackgroundTimer() {
             chrome.runtime.sendMessage({
                 action: "getTime"
-            }, (time) => {
-                this.minutesText = time.minutes;
-                this.secondsText = time.seconds;
+            }, (res) => {
+                this.minutesText = res.minutes;
+                this.secondsText = res.seconds;
+                this.activeTab = res.mode;
             });  
+        },
+
+        onTabChange(index) {
+            chrome.runtime.sendMessage({ action: "changeMode", mode: this.activeTab});
+            this.minutesText = this.tabs[index].minutes;
+            this.secondsText = "00";
+            this.pauseTimer();
         }
 
     }
@@ -77,24 +120,10 @@ export default {
         justify-content: center;
         align-items: center;
         flex-direction: column;
-        background: rgba(0,0,0,0.25);
+        // background: rgba(0,0,0,0.25);
         padding: 5px 100px;
-        color: #ffffff;
-        box-shadow: 0 0 9px 0px rgb(0 0 0 / 0.3); // adds some glossy effect
-
-        h2 {
-            font-weight: 400;
-
-            &, +p {
-                padding: 0;
-                margin: 0;
-            }
-        }
-
-        p {
-            font-size: 56px;
-            font-weight: 100;
-        }
+        color: #000000;
+        // box-shadow: 0 0 9px 0px rgb(0 0 0 / 0.3); // adds some glossy effect
 
         .controls {
             display: inline-flex;
@@ -109,4 +138,22 @@ export default {
             }
         }
     }
+    .tab-item {
+        text-align: center;
+
+        h2 {
+            font-weight: 400;
+
+            &, +p {
+                padding: 0;
+                margin: 0;
+            }
+        }
+
+        p {
+            font-size: 56px;
+            font-weight: 100;
+        }
+    }
+
 </style>
