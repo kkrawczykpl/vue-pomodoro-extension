@@ -4,8 +4,6 @@ export default class Timer {
     constructor() {
         this.minutes = 0;
         this.seconds = 0;
-        this.minutesText = "00";
-        this.secondsText = "00";
         this.badge = new Badge();
         this.duration = 0;
         this.interval = null;
@@ -15,7 +13,8 @@ export default class Timer {
         this.userSettings = {
             work: 25,
             rest: 5,
-            long: 15
+            long: 15,
+            cycles: 3
         }  
         this.setListeners();
         this.resetTimer();
@@ -87,11 +86,11 @@ export default class Timer {
     }
 
     parseText() {
-        this.minutesText = this.minutes < 10 ? "0" + this.minutes.toString() : this.minutes.toString();
-        this.secondsText = this.seconds < 10 ? "0" + this.seconds.toString() : this.seconds.toString();
+        let minutesText = this.minutes < 10 ? "0" + this.minutes.toString() : this.minutes.toString();
+        let secondsText = this.seconds < 10 ? "0" + this.seconds.toString() : this.seconds.toString();
         return {
-            minutes: this.minutesText,
-            seconds: this.secondsText,
+            minutes: minutesText,
+            seconds: secondsText,
             mode: this.mode
         }
     }
@@ -100,7 +99,7 @@ export default class Timer {
         if(mode) {
             this.mode = mode;
         }else{
-            if(this.cycles > 2) {
+            if(this.cycles > this.userSettings.cycles) {
                 this.mode = 2;
             }else{
                 this.mode = this.mode === 0 ? 1 : 0;

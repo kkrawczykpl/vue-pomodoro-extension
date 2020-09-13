@@ -36,7 +36,7 @@ export default {
                     id: 0,
                     label: "Work",
                     content: "hey",
-                    minutes: 25
+                    minutes: "25"
                 },
                 {
                     id: 1,
@@ -48,7 +48,7 @@ export default {
                     id: 2,
                     label: "Long Break",
                     content: "Long Break",
-                    minutes: 15
+                    minutes: "15"
                 }
             ]
         }
@@ -91,6 +91,8 @@ export default {
         restart() {
             this.isRunning = false;
             chrome.runtime.sendMessage({ action: "resetTimer"});
+            clearInterval(this.interval);
+            this.startTimer();
         },
 
         getBackgroundTimer() {
